@@ -1,0 +1,690 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>เลขลุ้นแต้ม</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Prompt:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap">
+<style>
+/* Layout: mobile app shell — gold header, player strip, round card, list rail + keypad, fixed bottom action bar. Single dark look by choice. */
+:root{
+  color-scheme:dark;
+  --bg:#131211; --panel:#1d1b18; --panel-2:#2a2620; --line:#3b352c;
+  --ink:#f4efe5; --muted:#a69c8b; --gold:#f2c14e; --gold-ink:#1f1708;
+  --ok:#62c283; --bad:#e8604f;
+  --gold-band:linear-gradient(100deg,#6d4a14 0%,#c99434 28%,#f6e08e 52%,#d4a23c 74%,#6b4812 100%);
+  --display:"Prompt","IBM Plex Sans Thai",system-ui,sans-serif;
+  --body:"IBM Plex Sans Thai","Prompt",system-ui,sans-serif;
+  --r:12px;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+.topbar{background:var(--gold-band);padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.topbar-in{max-width:540px;margin:0 auto;display:flex;align-items:center;gap:10px}
+.brand{font-family:var(--display);font-weight:700;font-size:22px;color:var(--gold-ink);line-height:1.1}
+.brand small{display:block;font-family:var(--body);font-weight:600;font-size:11px;letter-spacing:.06em;opacity:.75}
+.pts{margin-left:auto;background:rgba(31,23,8,.82);color:var(--gold);border-radius:10px;padding:5px 12px;font-family:var(--display);font-weight:600;font-size:17px;white-space:nowrap;line-height:1.2;text-align:right;max-width:46%;overflow:hidden}
+.pts span{display:block;font-size:11px;color:var(--muted);font-family:var(--body);overflow:hidden;text-overflow:ellipsis}
+.menu-btn{width:44px;height:40px;border-radius:10px;background:rgba(31,23,8,.82);display:grid;place-items:center;flex:0 0 auto}
+.menu-btn i{display:block;width:18px;height:2px;background:var(--gold);box-shadow:0 -6px 0 var(--gold),0 6px 0 var(--gold)}
+
+.app{max-width:540px;margin:0 auto;padding-block:12px calc(96px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:12px}
+
+.pstrip-cap{font-size:12px;color:var(--muted);margin-bottom:-6px}
+.players{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.players::-webkit-scrollbar{display:none}
+.pchip{flex:0 0 auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 12px;display:flex;flex-direction:column;align-items:flex-start;line-height:1.25;min-width:72px;max-width:150px}
+.pchip b{font-family:var(--display);font-weight:600;font-size:15px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pchip small{color:var(--muted);font-size:12px}
+.pchip.on{background:var(--gold);color:var(--gold-ink);border-color:var(--gold)}
+.pchip.on small{color:var(--gold-ink)}
+.pchip.add{justify-content:center;align-items:center;color:var(--gold);border-style:dashed;font-weight:600}
+
+.round{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:12px}
+.round-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.round h1{font-family:var(--display);font-weight:600;font-size:20px;margin:0}
+.round h1 .lbl{color:var(--muted);font-weight:500;font-size:15px;margin-right:6px}
+.past{margin-left:auto;border:1px solid var(--gold);color:var(--gold);border-radius:10px;padding:6px 12px;font-weight:500}
+.cd{display:flex;align-items:center;gap:5px;font-family:var(--display);font-weight:600}
+.cd b{background:var(--panel-2);border-radius:8px;padding:2px 8px;min-width:2.4em;text-align:center;font-size:19px}
+.cd-cap{color:var(--muted);font-size:13px;margin-right:4px}
+.closed{display:flex;align-items:center;gap:10px;background:rgba(232,96,79,.12);border:1px solid rgba(232,96,79,.4);border-radius:10px;padding:8px 10px;font-size:14px}
+.closed .btn{margin-left:auto}
+
+.board{display:grid;grid-template-columns:minmax(92px,30%) 1fr;gap:10px;align-items:start}
+.rail{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px 8px;display:flex;flex-direction:column;gap:8px;position:sticky;top:10px;max-height:calc(100vh - 140px);overflow:auto;min-width:0}
+.rail-h{font-family:var(--display);color:var(--gold);font-weight:600;font-size:15px;text-align:center;padding-bottom:6px;border-bottom:1px dashed var(--gold);line-height:1.3}
+.rail-h small{display:block;color:var(--ink);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rail-c{text-align:center;font-size:13px;color:var(--muted)}
+.rgroup{display:flex;flex-direction:column;gap:4px}
+.rtitle{font-size:12px;color:var(--muted);font-weight:600}
+.rnum{display:flex;justify-content:space-between;align-items:center;background:var(--panel-2);border-radius:7px;padding:4px 8px;font-family:var(--display);font-weight:600;font-size:16px;font-variant-numeric:tabular-nums}
+.rnum .x{color:var(--muted);font-size:14px}
+.rail .empty{font-size:12px;color:var(--muted);text-align:center;margin:6px 0}
+.rail-clear{font-size:12px;color:var(--bad);padding:4px}
+.cap{display:inline-block;font-family:var(--body);font-size:10px;font-weight:600;line-height:1.4;padding:0 5px;margin-left:4px;border-radius:5px;background:rgba(232,96,79,.18);color:var(--bad);vertical-align:middle;white-space:nowrap}
+.capl{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px}
+.capadd{grid-template-columns:1fr auto}.capadd .btn.ghost{grid-column:1/-1}
+
+.pad-col{display:flex;flex-direction:column;gap:10px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr)}
+.tab{font-family:var(--display);font-weight:600;font-size:17px;padding:8px 0;border-bottom:2px solid transparent}
+.tab.on{color:var(--gold);border-color:var(--gold)}
+.types{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.type{background:var(--panel-2);border-radius:10px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;line-height:1.25}
+.type b{font-family:var(--display);font-weight:600;font-size:16px}
+.type small{font-size:13px;color:var(--muted)}
+.type.on{background:var(--gold);color:var(--gold-ink)}
+.type.on small{color:var(--gold-ink)}
+
+.btn{border-radius:10px;padding:9px 14px;font-weight:600}
+.btn.gold{background:var(--gold);color:var(--gold-ink)}
+.btn.ghost{background:var(--panel-2)}
+.btn.block{width:100%}
+.btn.sm{padding:5px 10px;font-size:13px}
+.btn.danger{color:var(--bad)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--panel-2);border-radius:10px;padding:3px}
+.seg button{padding:7px 0;border-radius:8px;font-weight:600}
+.seg button.on{background:var(--gold);color:var(--gold-ink)}
+.slots{display:flex;justify-content:center;gap:14px;padding:18px 0 6px}
+.slot{width:48px;height:46px;border-bottom:2px solid var(--gold);display:grid;place-items:center;font-family:var(--display);font-weight:600;font-size:30px}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.key{background:var(--panel-2);border-radius:10px;height:54px;font-family:var(--display);font-weight:600;font-size:24px;transition:transform .08s}
+.key:active{transform:scale(.96)}
+.key.fn{font-size:16px}
+.quick{display:flex;flex-direction:column;gap:10px;padding-top:10px}
+.qdig{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.qdig button{background:var(--panel-2);border-radius:8px;height:40px;font-family:var(--display);font-weight:600;font-size:18px}
+.qdig button.on{background:var(--gold);color:var(--gold-ink)}
+.qact{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.qcap{font-size:12px;color:var(--muted)}
+
+.bottombar{position:fixed;left:0;right:0;bottom:0;background:rgba(19,18,17,.96);border-top:1px solid var(--line);padding-top:10px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));z-index:5}
+.bottombar-in{max-width:540px;margin:0 auto;display:grid;grid-template-columns:1fr 1.2fr;gap:10px}
+.bottombar .btn{padding:13px 8px;font-family:var(--display);font-size:16px;position:relative}
+.badge{position:absolute;top:-8px;right:-6px;background:var(--bad);color:#fff;border:2px solid var(--bg);border-radius:999px;min-width:26px;height:26px;display:grid;place-items:center;font-size:13px;padding:0 6px}
+
+#scrim{position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--panel);width:100%;max-width:540px;max-height:88%;overflow:auto;border-radius:16px 16px 0 0;border-top:1px solid var(--line);padding-top:14px;padding-bottom:calc(18px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.sheet-h{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.sheet-h h2{font-family:var(--display);font-weight:600;font-size:19px;margin:0;text-wrap:balance;min-width:0}
+.sheet-x{margin-left:auto;width:36px;height:36px;border-radius:9px;background:var(--panel-2);font-size:20px;line-height:1;flex:0 0 auto}
+#sheet-body{display:flex;flex-direction:column;gap:12px}
+.note{color:var(--muted);font-size:13px;margin:0}
+.prow,.phead{display:grid;grid-template-columns:1.2fr .7fr 1fr 1fr;gap:8px;align-items:center}
+.phead{font-size:12px;color:var(--muted)}
+.ptype{font-size:13px}
+.pnum{font-family:var(--display);font-weight:600;font-size:18px}
+.pwin{text-align:right;color:var(--ok);font-variant-numeric:tabular-nums;font-size:14px}
+input[type=number],input.txt,textarea{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:7px 9px;width:100%;min-width:0}
+textarea{min-height:90px;font-size:12px;font-family:ui-monospace,monospace}
+.allrow{display:grid;grid-template-columns:1fr 90px auto;gap:8px;align-items:center;font-size:14px}
+.sum{display:flex;flex-direction:column;gap:4px;border-top:1px dashed var(--line);padding-top:10px}
+.sum div{display:flex;justify-content:space-between;gap:10px}
+.sum b{font-family:var(--display);font-variant-numeric:tabular-nums}
+.neg{color:var(--bad)} .pos{color:var(--ok)}
+.list{display:flex;flex-direction:column;gap:8px}
+.li{background:var(--panel-2);border-radius:10px;padding:10px;display:flex;align-items:center;gap:10px}
+.li .grow{flex:1;min-width:0}
+.li .big{font-family:var(--display);font-weight:600;font-size:18px}
+.li small{color:var(--muted);display:block;font-size:12px}
+.tag{font-size:12px;border-radius:6px;padding:2px 7px;font-weight:600;white-space:nowrap}
+.tag.pend{background:rgba(242,193,78,.16);color:var(--gold)}
+.hres{display:flex;gap:16px;margin-top:2px;flex-wrap:wrap}
+.hres b{font-family:var(--display);font-size:20px;color:var(--gold);letter-spacing:.08em}
+.gh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:4px}
+.gh h3{margin:0}
+.gh span{font-size:13px;color:var(--muted)}
+.drawgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.drawgrid label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.drawgrid input{font-family:var(--display);font-size:26px;text-align:center;letter-spacing:.2em;color:var(--gold)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.menu{display:flex;flex-direction:column;gap:8px}
+.menu .btn{text-align:left;padding:13px 14px}
+.menu .btn small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.stat{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat div{background:var(--panel-2);border-radius:10px;padding:10px}
+.stat span{font-size:12px;color:var(--muted);display:block}
+.stat b{font-family:var(--display);font-size:20px;font-variant-numeric:tabular-nums}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{padding:6px 4px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+td.name{font-weight:600;white-space:normal}
+th{color:var(--muted);font-weight:500}
+.rank{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;background:var(--panel-2);font-size:12px;margin-right:6px}
+tr:first-child .rank{background:var(--gold);color:var(--gold-ink)}
+.rates{display:grid;grid-template-columns:1fr 90px;gap:6px 10px;align-items:center;font-size:14px}
+.addp{display:grid;grid-template-columns:1fr 90px auto;gap:8px;align-items:end}
+.addp label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+h3{font-family:var(--display);font-size:15px;margin:6px 0 0;color:var(--gold)}
+
+/* lesson report: printed-paper look, fixed light palette by choice */
+.rpt-wrap{overflow-x:auto;border-radius:10px}
+.rpt{--p-bg:#ffffff;--p-ink:#1d1a15;--p-muted:#6d6457;--p-line:#e4ddd0;--p-soft:#f6f1e6;--p-gold:#b07d16;--p-pos:#1f7a45;--p-neg:#b8392b;
+  background:var(--p-bg);color:var(--p-ink);font-family:var(--body);font-size:13px;line-height:1.55;display:flex;flex-direction:column;gap:0;min-width:0}
+.rpt-print{position:fixed;left:-12000px;top:0;width:760px}
+.rsec{padding:14px 20px;background:var(--p-bg)}
+.rpt h1{font-family:var(--display);font-weight:700;font-size:24px;margin:2px 0 4px;text-wrap:balance;line-height:1.25}
+.rpt h2{font-family:var(--display);font-weight:600;font-size:16px;margin:0 0 8px;padding-bottom:4px;border-bottom:2px solid var(--p-gold)}
+.rpt p{margin:0 0 6px}
+.r-head{border-top:6px solid var(--p-gold);padding-top:18px}
+.r-kicker{font-size:11px;letter-spacing:.08em;color:var(--p-gold);font-weight:600}
+.r-head p{color:var(--p-muted)}
+.r-badge{float:right;font-size:11px;font-weight:600;border:1px solid var(--p-neg);color:var(--p-neg);border-radius:6px;padding:1px 8px}
+.r-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.r-kpis div{background:var(--p-soft);border-radius:8px;padding:10px;display:flex;flex-direction:column}
+.r-kpis span{font-size:11px;color:var(--p-muted)}
+.r-kpis b{font-family:var(--display);font-size:22px;font-variant-numeric:tabular-nums;line-height:1.2}
+.r-kpis small{font-size:11px;color:var(--p-muted)}
+.r-kpis .hl{background:var(--p-ink);color:#fff}
+.r-kpis .hl span,.r-kpis .hl small{color:#d8cfbf}
+.r-lesson{margin:0 20px;padding:12px 14px;background:var(--p-soft);border-left:4px solid var(--p-gold);border-radius:0 8px 8px 0}
+.r-lesson b{font-family:var(--display);display:block;margin-bottom:2px}
+.r-lesson strong{color:var(--p-neg)}
+.rpt table{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+.rpt th{color:var(--p-muted);font-weight:500;text-align:right;padding:5px 6px;border-bottom:1px solid var(--p-ink)}
+.rpt td{text-align:right;padding:6px;border-bottom:1px solid var(--p-line);white-space:nowrap}
+.rpt th:nth-child(-n+2),.rpt td:nth-child(-n+2){text-align:left}
+.rpt td.nm{white-space:normal;font-weight:600}
+.rpt td.nm small{display:block;font-weight:400;color:var(--p-pos);font-size:11px}
+.rpt td.mono{font-family:var(--display);font-weight:600;letter-spacing:.06em}
+.rpt .pos{color:var(--p-pos)} .rpt .neg{color:var(--p-neg)}
+.r-legend{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--p-muted);margin-bottom:8px;flex-wrap:wrap}
+.r-legend i{display:inline-block;width:12px;height:8px;border-radius:2px;margin-left:8px}
+.r-legend i:first-child{margin-left:0}
+.real{background:var(--p-gold)} .theo{background:#c9c1b2}
+.r-bar{display:grid;grid-template-columns:110px 1fr;gap:10px;align-items:center;padding:5px 0;border-bottom:1px solid var(--p-line)}
+.r-bar .lb{font-weight:600;line-height:1.3}
+.r-bar .lb small{display:block;font-weight:400;color:var(--p-muted);font-size:11px}
+.r-bar .tr{display:grid;grid-template-columns:1fr 52px;gap:3px 8px;align-items:center}
+.r-bar .b{height:9px;border-radius:2px;min-width:2px}
+.r-bar .tr span{font-size:11.5px;text-align:right;font-variant-numeric:tabular-nums}
+.r-note{font-size:11.5px;color:var(--p-muted);margin-top:6px!important}
+.rpt ul{margin:4px 0 0;padding-left:18px}
+.r-foot{font-size:11px;color:var(--p-muted);border-top:1px solid var(--p-line);margin-top:6px}
+@media (max-width:480px){.rpt-wrap .r-kpis{grid-template-columns:1fr 1fr}.rpt-wrap .rsec{padding:12px}.rpt-wrap .r-lesson{margin:0 12px}.rpt-wrap .r-bar{grid-template-columns:84px 1fr}}
+
+#toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:999px;font-weight:600;font-size:14px;z-index:30;max-width:90%;text-align:center}
+@media (max-width:380px){.slot{width:40px;font-size:26px}.key{height:50px}.type b{font-size:15px}.addp{grid-template-columns:1fr 1fr}.addp .btn{grid-column:1/-1}}
+@media (prefers-reduced-motion:reduce){.key{transition:none}}
+</style>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand">เลขลุ้นแต้ม<small>แต้มจำลอง · สาธิตในห้องเรียน</small></div>
+    <div class="pts num"><span id="pts-name"></span><b id="pts">0</b></div>
+    <button class="menu-btn" data-act="menu" aria-label="เมนู"><i></i></button>
+  </div>
+</header>
+
+<main class="app">
+  <div class="pstrip-cap">ผู้เล่นที่กำลังทาย</div>
+  <div class="players" id="players"></div>
+
+  <section class="round">
+    <div class="round-row">
+      <h1><span class="lbl">งวด</span><span id="round-date" class="num"></span></h1>
+      <button class="past" data-act="history">งวดที่ผ่านมา</button>
+    </div>
+    <div class="round-row">
+      <span class="cd-cap">ปิดรับใน</span>
+      <div class="cd num"><b id="cd-h">00</b>:<b id="cd-m">00</b>:<b id="cd-s">00</b></div>
+    </div>
+    <div class="closed" id="closed" hidden>
+      <span>งวดนี้ปิดรับแล้ว</span>
+      <button class="btn gold sm" data-act="draw">ออกผล</button>
+    </div>
+  </section>
+
+  <div class="board">
+    <aside class="rail">
+      <div class="rail-h">รายการทาย<small id="rail-who"></small></div>
+      <div class="rail-c num" id="rail-count">0 รายการ</div>
+      <div id="rail-list"></div>
+      <button class="rail-clear" id="rail-clear" data-act="clear-cart" hidden>ล้างรายการ</button>
+    </aside>
+
+    <div class="pad-col">
+      <div class="card">
+        <div class="tabs">
+          <button class="tab" data-act="tab" data-n="1">1 ตัว</button>
+          <button class="tab" data-act="tab" data-n="2">2 ตัว</button>
+          <button class="tab" data-act="tab" data-n="3">3 ตัว</button>
+        </div>
+        <div class="types" id="types"></div>
+      </div>
+      <button class="btn gold block" data-act="reverse">+ กลับเลข</button>
+      <div class="card">
+        <div class="seg">
+          <button id="m-pad" data-act="mode" data-m="pad">ใส่เลข</button>
+          <button id="m-quick" data-act="mode" data-m="quick">เลือกแบบด่วน</button>
+        </div>
+        <div id="pad">
+          <div class="slots" id="slots"></div>
+          <div class="keys">
+            <button class="key" data-act="digit" data-d="1">1</button>
+            <button class="key" data-act="digit" data-d="2">2</button>
+            <button class="key" data-act="digit" data-d="3">3</button>
+            <button class="key" data-act="digit" data-d="4">4</button>
+            <button class="key" data-act="digit" data-d="5">5</button>
+            <button class="key" data-act="digit" data-d="6">6</button>
+            <button class="key" data-act="digit" data-d="7">7</button>
+            <button class="key" data-act="digit" data-d="8">8</button>
+            <button class="key" data-act="digit" data-d="9">9</button>
+            <button class="key fn" data-act="back">ลบ</button>
+            <button class="key" data-act="digit" data-d="0">0</button>
+            <button class="key fn" data-act="clear">Clear</button>
+          </div>
+        </div>
+        <div id="quick" class="quick" hidden></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<nav class="bottombar">
+  <div class="bottombar-in">
+    <button class="btn ghost" data-act="bets">รายการทายงวดนี้</button>
+    <button class="btn gold" data-act="price">ใส่แต้ม<span class="badge num" id="badge" hidden>0</span></button>
+  </div>
+</nav>
+
+<div id="scrim" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <div class="sheet-h"><h2 id="sheet-title"></h2><button class="sheet-x" data-act="close" aria-label="ปิด">×</button></div>
+    <div id="sheet-body"></div>
+  </div>
+</div>
+<div id="toast" hidden></div>
+
+<script>
+(function(){
+const KEY='leklun.v2';
+const START=1000;
+const TYPES={
+  '1top':{len:1,label:'วิ่งบน',rate:3,p:0.271},
+  '1bot':{len:1,label:'วิ่งล่าง',rate:4,p:0.19},
+  '2top':{len:2,label:'2 ตัวบน',rate:90,p:0.01},
+  '2bot':{len:2,label:'2 ตัวล่าง',rate:90,p:0.01},
+  '3top':{len:3,label:'3 ตัวบน',rate:900,p:0.001},
+  '3tod':{len:3,label:'3 ตัวโต๊ด',rate:150,p:0.006}
+};
+/* ผลสลากกินแบ่งรัฐบาลปี 2569: [รางวัลที่ 1, เลขท้าย 2 ตัว] จาก lottery.co.th ตรวจทานกับ sanook.com */
+const OFFICIAL={
+  '2026-01-02':['837706','16'],'2026-01-17':['878972','02'],'2026-02-01':['174629','48'],'2026-02-16':['340563','07'],
+  '2026-03-01':['820866','06'],'2026-03-16':['833009','64'],'2026-04-01':['292514','47'],'2026-04-16':['309612','77'],
+  '2026-05-02':['536077','43'],'2026-05-16':['107387','08'],'2026-06-01':['173770','95'],'2026-06-16':['287184','48'],
+  '2026-07-01':['751495','62'],'2026-07-16':['639214','71'],'2026-08-01':['932479','69'],'2026-08-16':['004615','53'],
+  '2026-09-01':['417212','04'],'2026-09-16':['730640','64'],'2026-10-01':['402701','70'],'2026-10-16':['011781','48']
+};
+/* งวดที่เหลือของปี 2569 ตามปฏิทินออกรางวัล */
+const SCHEDULE=['2026-11-01','2026-11-16','2026-12-01','2026-12-16','2026-12-30'];
+const $=s=>document.querySelector(s);
+const fmt=n=>Number(n).toLocaleString('th-TH',{maximumFractionDigits:2});
+const pad=n=>String(n).padStart(2,'0');
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const signed=n=>(n>0?'+':'')+fmt(n);
+
+/* ---------- rounds: draws on the 1st and 16th, close 15:00 ---------- */
+const keyOf=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+function closeAt(k){const[y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d,15,0,0).getTime()}
+function firstFromNow(){const n=new Date();const c=[new Date(n.getFullYear(),n.getMonth(),1),new Date(n.getFullYear(),n.getMonth(),16),new Date(n.getFullYear(),n.getMonth()+1,1)];for(const d of c){if(closeAt(keyOf(d))>Date.now())return keyOf(d)}return keyOf(c[2])}
+function nextAfter(k){const known=[...Object.keys(OFFICIAL),...SCHEDULE].sort().find(x=>x>k);if(known)return known;
+  const[y,m,d]=k.split('-').map(Number);return d<16?keyOf(new Date(y,m-1,16)):keyOf(new Date(y,m,1))}
+function thDate(k){const[y,m,d]=k.split('-').map(Number);return pad(d)+'/'+pad(m)+'/'+(y+543)}
+
+/* ---------- local database (tables: players, rounds, entries, carts) ---------- */
+function fresh(){
+  const d={v:2,rates:Object.fromEntries(Object.entries(TYPES).map(([k,t])=>[k,t.rate])),
+    players:[{id:1,name:'กาย',points:START},{id:2,name:'ก๊อต',points:START}],cur:1,pseq:3,
+    carts:{},rounds:[],entries:[],seq:1,lastAmt:10,caps:[],capPct:50};
+  const r=firstFromNow();d.rounds.push({id:r,status:'open',result:null});
+  [[1,'55'],[1,'77'],[2,'31'],[2,'45']].forEach(([p,n])=>{d.entries.push({id:d.seq++,p,r,t:'2top',n,a:10,rate:90,st:'pend',win:0,at:Date.now()});d.players.find(x=>x.id===p).points-=10});
+  return d}
+function load(){try{const s=localStorage.getItem(KEY);if(s){const d=JSON.parse(s);if(d&&d.v===2&&d.players&&d.players.length){if(!Array.isArray(d.caps))d.caps=[];if(!d.capPct)d.capPct=50;return d}}}catch(e){}return null}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}}
+let db;
+
+function current(){let r=db.rounds.find(r=>r.status==='open');if(!r){const last=db.rounds[db.rounds.length-1];r={id:last?nextAfter(last.id):firstFromNow(),status:'open',result:null};db.rounds.push(r);save()}return r}
+const isClosed=()=>Date.now()>=closeAt(current().id);
+const P=()=>db.players.find(p=>p.id===db.cur)||db.players[0];
+const pById=id=>db.players.find(p=>p.id===id);
+function cart(){const id=P().id;if(!db.carts[id])db.carts[id]=[];return db.carts[id]}
+const isCap=(t,n)=>db.caps.some(c=>c.t===t&&c.n===n);
+const rateFor=(t,n)=>db.rates[t]*(isCap(t,n)?db.capPct/100:1);
+
+/* ---------- UI state ---------- */
+let tab=2, sel=new Set(['2top']), buf='', mode='pad', qd=null, sheetKind=null, wasClosed=null, pAmts=[];
+const typesOf=n=>Object.keys(TYPES).filter(k=>TYPES[k].len===n);
+function perms(s){if(s.length<=1)return[s];const out=new Set();[...s].forEach((c,i)=>perms(s.slice(0,i)+s.slice(i+1)).forEach(p=>out.add(c+p)));return[...out]}
+function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,1800)}
+
+/* ---------- render ---------- */
+function renderTop(){const p=P();$('#pts-name').textContent=p.name;$('#pts').textContent=fmt(p.points);$('#round-date').textContent=thDate(current().id)}
+function renderPlayers(){
+  $('#players').innerHTML=db.players.map(p=>`<button class="pchip${p.id===P().id?' on':''}" data-act="pick" data-id="${p.id}" aria-pressed="${p.id===P().id}"><b>${esc(p.name)}</b><small class="num">${fmt(p.points)} แต้ม</small></button>`).join('')+`<button class="pchip add" data-act="players">+ ผู้เล่น</button>`;
+  const on=$('#players .pchip.on');if(on)on.scrollIntoView({block:'nearest',inline:'nearest'})}
+function renderTabs(){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',+b.dataset.n===tab));
+  $('#types').innerHTML=typesOf(tab).map(k=>`<button class="type${sel.has(k)?' on':''}" data-act="type" data-t="${k}" aria-pressed="${sel.has(k)}"><b>${TYPES[k].label}</b><small>จ่าย ${fmt(db.rates[k])}</small></button>`).join('')}
+function renderSlots(){let h='';for(let i=0;i<tab;i++)h+=`<div class="slot">${buf[i]||''}</div>`;$('#slots').innerHTML=h}
+function renderMode(){$('#m-pad').classList.toggle('on',mode==='pad');$('#m-quick').classList.toggle('on',mode==='quick');$('#pad').hidden=mode!=='pad';$('#quick').hidden=mode!=='quick';if(mode==='quick')renderQuick()}
+function renderQuick(){
+  const digs=[...'0123456789'].map(d=>`<button class="${qd===d?'on':''}" data-act="${tab===1?'q1':'qd'}" data-d="${d}">${d}</button>`).join('');
+  const list=tab===2?[['19 ประตู','door'],['รูดหน้า','front'],['รูดหลัง','back'],['เลขเบิ้ล','double'],['สุ่ม 5 ชุด','rand']]:tab===3?[['เลขตอง','triple'],['สุ่ม 5 ชุด','rand']]:[];
+  const acts=list.map(([l,k])=>`<button class="btn ghost" data-act="quick" data-k="${k}">${l}</button>`).join('');
+  $('#quick').innerHTML=`<div class="qcap">${tab===1?'แตะเลขเพื่อเพิ่ม':'เลือกเลขหลัก แล้วเลือกชุด'}</div><div class="qdig">${digs}</div>${acts?`<div class="qact">${acts}</div>`:''}`}
+function renderRail(){
+  const c=cart();$('#rail-who').textContent=P().name;
+  $('#rail-count').textContent=c.length+' รายการ';$('#rail-clear').hidden=!c.length;
+  $('#rail-list').innerHTML=!c.length?'<p class="empty">กดเลขที่แป้นเพื่อเพิ่มลงรายการ</p>':Object.keys(TYPES).map(k=>{const it=c.filter(x=>x.t===k);if(!it.length)return'';
+    return `<div class="rgroup"><div class="rtitle">${TYPES[k].label} (${it.length})</div>${it.map(x=>`<button class="rnum" data-act="rm" data-t="${x.t}" data-n="${x.n}" aria-label="ลบ ${x.n}"><span>${x.n}${isCap(x.t,x.n)?'<span class="cap">อั้น</span>':''}</span><span class="x" aria-hidden="true">×</span></button>`).join('')}</div>`}).join('');
+  const b=$('#badge');b.textContent=c.length;b.hidden=!c.length}
+function renderAll(){renderTop();renderPlayers();renderTabs();renderSlots();renderMode();renderRail();tick()}
+function tick(){
+  const diff=closeAt(current().id)-Date.now(),c=diff<=0,s=Math.max(0,Math.floor(diff/1000));
+  $('#cd-h').textContent=pad(Math.floor(s/3600));$('#cd-m').textContent=pad(Math.floor(s%3600/60));$('#cd-s').textContent=pad(s%60);
+  $('#closed').hidden=!c;if(wasClosed!==null&&wasClosed!==c)renderAll();wasClosed=c}
+
+/* ---------- entering numbers ---------- */
+function guard(){if(isClosed()){toast('งวดนี้ปิดรับแล้ว');return false}if(!sel.size){toast('เลือกประเภทก่อน');return false}return true}
+function addNums(nums){const c=cart();let n=0;const caps=new Set();for(const t of sel)if(TYPES[t].len===tab)for(const x of nums)if(!c.some(y=>y.t===t&&y.n===x)){c.push({t,n:x});n++;if(isCap(t,x))caps.add(x)}
+  save();renderRail();if(caps.size)setTimeout(()=>toast(`เลขอั้น ${[...caps].join(', ')} จ่าย ${db.capPct}%`),0);return n}
+function press(d){if(!guard())return;buf+=d;if(buf.length===tab){addNums([buf]);buf=''}renderSlots()}
+function reverse(){if(!guard())return;const c=cart();const src=c.filter(x=>TYPES[x.t].len===tab&&sel.has(x.t));if(!src.length)return toast('ยังไม่มีเลขให้กลับ');
+  let n=0;src.forEach(x=>perms(x.n).forEach(p=>{if(!c.some(y=>y.t===x.t&&y.n===p)){c.push({t:x.t,n:p});n++}}));save();renderRail();toast(n?`กลับเลขเพิ่ม ${n} รายการ`:'มีเลขกลับครบแล้ว')}
+function quick(k){if(!guard())return;const d=qd;let nums=[];
+  if(['door','front','back'].includes(k)&&d==null)return toast('เลือกเลขหลักก่อน');
+  if(k==='door')for(let i=0;i<100;i++){const s=pad(i);if(s.includes(d))nums.push(s)}
+  if(k==='front')for(let i=0;i<10;i++)nums.push(d+i);
+  if(k==='back')for(let i=0;i<10;i++)nums.push(i+d);
+  if(k==='double')for(let i=0;i<10;i++)nums.push(''+i+i);
+  if(k==='triple')for(let i=0;i<10;i++)nums.push(''+i+i+i);
+  if(k==='rand'){const s=new Set();while(s.size<5)s.add(String(Math.floor(Math.random()*10**tab)).padStart(tab,'0'));nums=[...s]}
+  toast(`เพิ่ม ${addNums(nums)} รายการ`)}
+
+/* ---------- sheets ---------- */
+function openSheet(kind,title,html){sheetKind=kind;$('#sheet-title').textContent=title;$('#sheet-body').innerHTML=html;$('#scrim').hidden=false;$('.sheet').scrollTop=0}
+function closeSheet(){$('#scrim').hidden=true;sheetKind=null}
+
+function showMenu(){openSheet('menu','เมนู',`<div class="menu">
+  <button class="btn ghost" data-act="players">ผู้เล่น<small>เพิ่ม ลบ เติมแต้มรายคน</small></button>
+  <button class="btn ghost" data-act="draw">ออกผลงวดนี้<small>ใส่ผลจริงหรือสุ่ม แล้วคิดแต้มทุกคน</small></button>
+  <button class="btn ghost" data-act="caps">เลขอั้น<small>เลือกเลขที่จ่ายลดเหลือ ${db.capPct}% เมื่อทายถูก</small></button>
+  <button class="btn ghost" data-act="results">ผลรางวัลย้อนหลัง<small>เลขที่ออกทุกงวดปี 2569 และเลขที่ออกซ้ำ</small></button>
+  <button class="btn ghost" data-act="report">รายงานสรุปบทเรียน (PDF)<small>ผลรายคน อัตราคืนจริงเทียบทฤษฎี ผลของเลขอั้น</small></button>
+  <button class="btn ghost" data-act="stats">ตารางคะแนน<small>อันดับผู้เล่น และอัตราคืนจริงเทียบทฤษฎี</small></button>
+  <button class="btn ghost" data-act="history">งวดที่ผ่านมา<small>ผลรางวัลและผลรายคนย้อนหลัง</small></button>
+  <button class="btn ghost" data-act="settings">อัตราจ่ายและข้อมูล<small>แก้อัตราจ่าย สำรอง/นำเข้า/ล้างข้อมูล</small></button>
+  </div><p class="note">ข้อมูลทั้งหมดเก็บในเบราว์เซอร์ของเครื่องนี้เท่านั้น</p>`)}
+
+function showPlayers(){
+  openSheet('players','ผู้เล่น',`<div class="list">${db.players.map(p=>{const n=db.entries.filter(e=>e.p===p.id&&e.st==='pend').length;
+    return `<div class="li"><div class="grow"><span class="big">${esc(p.name)}</span><small class="num">${fmt(p.points)} แต้ม · รอผล ${n} รายการ</small></div>
+    <button class="btn ghost sm" data-act="topup" data-id="${p.id}">+100</button>
+    <button class="btn ghost sm danger" data-act="del-p" data-id="${p.id}">ลบ</button></div>`}).join('')}</div>
+  <h3>เพิ่มผู้เล่น</h3>
+  <div class="addp"><label for="p-name">ชื่อ<input class="txt" id="p-name" maxlength="20" autocomplete="off" placeholder="เช่น ต้น"></label>
+  <label for="p-start">แต้มเริ่มต้น<input type="number" id="p-start" min="0" step="1" value="${START}"></label>
+  <button class="btn gold" data-act="add-p">เพิ่ม</button></div>
+  <p class="note">แตะชื่อในแถบผู้เล่นด้านบนเพื่อสลับคนที่กำลังทาย</p>`)}
+function addPlayer(){const name=$('#p-name').value.trim();const pts=Math.max(0,Math.floor(+$('#p-start').value||0));
+  if(!name)return toast('ใส่ชื่อผู้เล่นก่อน');if(db.players.some(p=>p.name===name))return toast('มีชื่อนี้แล้ว');
+  const p={id:db.pseq++,name,points:pts};db.players.push(p);db.cur=p.id;save();renderAll();showPlayers();toast('เพิ่ม '+name+' แล้ว')}
+function delPlayer(b){const id=+b.dataset.id;if(db.players.length<=1)return toast('ต้องมีผู้เล่นอย่างน้อย 1 คน');
+  if(!b.dataset.arm){b.dataset.arm='1';b.textContent='ยืนยันลบ';return}
+  const p=pById(id);db.players=db.players.filter(x=>x.id!==id);db.entries=db.entries.filter(e=>e.p!==id);delete db.carts[id];
+  if(db.cur===id)db.cur=db.players[0].id;save();renderAll();showPlayers();toast('ลบ '+p.name+' แล้ว')}
+
+function showPrice(){const c=cart();
+  if(!c.length)return toast('ยังไม่มีเลขในรายการ');if(isClosed())return toast('งวดนี้ปิดรับแล้ว');
+  const def=db.lastAmt||10;pAmts=c.map(()=>def);
+  const rows=c.map((x,i)=>`<div class="prow"><span class="ptype">${TYPES[x.t].label}${isCap(x.t,x.n)?` <span class="cap">อั้น ${db.capPct}%</span>`:''}</span><span class="pnum num">${x.n}</span><input type="number" id="amt-${i}" class="amt" data-i="${i}" inputmode="numeric" min="1" step="1" value="${def}" aria-label="แต้ม ${x.n}"><span class="pwin" id="pwin-${i}"></span></div>`).join('');
+  openSheet('price','ใส่แต้ม · '+P().name,`
+  <div class="allrow"><label for="amt-all">แต้มเท่ากันทุกเลข</label><input type="number" id="amt-all" inputmode="numeric" min="1" step="1" value="${def}"><button class="btn ghost sm" data-act="amt-all">ใช้ทั้งหมด</button></div>
+  <div class="phead"><span>ประเภท</span><span>เลข</span><span>แต้ม</span><span style="text-align:right">ถ้าถูกได้</span></div>${rows}
+  <div class="sum"><div><span>รวมใช้แต้ม</span><b id="p-total"></b></div><div><span>${esc(P().name)} เหลือหลังทาย</span><b id="p-left"></b></div></div>
+  <button class="btn gold block" data-act="confirm-bet" id="confirm-bet">บันทึกการทายของ ${esc(P().name)}</button>`);updPrice()}
+function updPrice(){let tot=0;cart().forEach((x,i)=>{const v=Math.floor(+$('#amt-'+i).value||0);pAmts[i]=v;tot+=v;$('#pwin-'+i).textContent=v>0?fmt(v*rateFor(x.t,x.n)):'-'});
+  const left=P().points-tot;$('#p-total').textContent=fmt(tot);const l=$('#p-left');l.textContent=fmt(left);l.className=left<0?'neg':'';
+  $('#confirm-bet').disabled=left<0||pAmts.some(v=>v<1)}
+function confirmBet(){if(isClosed())return toast('งวดนี้ปิดรับแล้ว');updPrice();const p=P(),c=cart(),tot=pAmts.reduce((a,b)=>a+b,0);
+  if(pAmts.some(v=>v<1))return toast('ใส่แต้มอย่างน้อย 1 ทุกเลข');if(tot>p.points)return toast('แต้มไม่พอ');
+  const r=current();c.forEach((x,i)=>db.entries.push({id:db.seq++,p:p.id,r:r.id,t:x.t,n:x.n,a:pAmts[i],rate:rateFor(x.t,x.n),cap:isCap(x.t,x.n),st:'pend',win:0,at:Date.now()}));
+  p.points-=tot;db.lastAmt=pAmts[0];const n=c.length;db.carts[p.id]=[];save();closeSheet();renderAll();toast(`บันทึกของ ${p.name} ${n} รายการ ใช้ ${fmt(tot)} แต้ม`)}
+
+function showBets(){const r=current(),closed=isClosed();const all=db.entries.filter(e=>e.r===r.id&&e.st!=='cancel');
+  const groups=db.players.map(p=>({p,es:all.filter(e=>e.p===p.id)})).filter(g=>g.es.length);
+  const tot=all.reduce((a,e)=>a+e.a,0);
+  openSheet('bets','รายการทายงวด '+thDate(r.id),groups.length?groups.map(g=>`<div class="gh"><h3>${esc(g.p.name)}</h3><span class="num">${g.es.length} รายการ · ${fmt(g.es.reduce((a,e)=>a+e.a,0))} แต้ม</span></div>
+    <div class="list">${g.es.map(e=>`<div class="li"><div class="grow"><span class="big num">${e.n}</span><small>${TYPES[e.t].label} · ${fmt(e.a)} แต้ม · จ่าย ${fmt(e.rate)}${e.cap?' · <span class="cap">อั้น</span>':''}</small></div>${closed?'<span class="tag pend">รอผล</span>':`<button class="btn ghost sm" data-act="cancel" data-id="${e.id}">ยกเลิก</button>`}</div>`).join('')}</div>`).join('')+
+    `<div class="sum"><div><span>${groups.length} คน · ${all.length} รายการ</span><b>${fmt(tot)} แต้ม</b></div></div>`
+    :'<p class="note">ยังไม่มีใครทายในงวดนี้ เลือกผู้เล่น กดเลข แล้วกด "ใส่แต้ม"</p>')}
+function cancelBet(id){if(isClosed())return toast('ปิดรับแล้ว ยกเลิกไม่ได้');const e=db.entries.find(e=>e.id===id);if(!e||e.st!=='pend')return;
+  e.st='cancel';const p=pById(e.p);if(p)p.points+=e.a;save();renderAll();showBets();toast(`คืน ${fmt(e.a)} แต้มให้ ${p?p.name:''}`)}
+
+function showDraw(){const r=current(),o=OFFICIAL[r.id];openSheet('draw','ออกผลงวด '+thDate(r.id),`${o?`<div class="li"><div class="grow"><small>ผลจริงงวดนี้ · รางวัลที่ 1</small><span class="big num">${o[0]}</span><small>3 ตัวบน ${o[0].slice(-3)} · 2 ตัวล่าง ${o[1]}</small></div><button class="btn gold sm" data-act="use-official">ใช้ผลจริง</button></div>`
+    :'<p class="note">ยังไม่มีผลจริงของงวดนี้ในแอพ ใส่เองจากประกาศกองสลาก หรือกดสุ่มเพื่อสาธิต</p>'}
+  <p class="note">ระบบจะคิดแต้มทุกคนแล้วเปิดงวดถัดไป</p>
+  <div class="drawgrid"><label for="d-top">3 ตัวบน<input class="txt" id="d-top" inputmode="numeric" maxlength="3" autocomplete="off"></label><label for="d-bot">2 ตัวล่าง<input class="txt" id="d-bot" inputmode="numeric" maxlength="2" autocomplete="off"></label></div>
+  <div class="row2"><button class="btn ghost" data-act="rand-draw">สุ่มผล</button><button class="btn gold" data-act="do-draw">ออกผล</button></div>`)}
+function hit(e,top,bot){const n=e.n;switch(e.t){
+  case '1top':return top.includes(n);case '1bot':return bot.includes(n);
+  case '2top':return top.slice(1)===n;case '2bot':return bot===n;
+  case '3top':return top===n;case '3tod':return [...n].sort().join('')===[...top].sort().join('')}return false}
+function roundRows(rid){const es=db.entries.filter(e=>e.r===rid&&e.st!=='cancel');
+  return db.players.map(p=>{const x=es.filter(e=>e.p===p.id);if(!x.length)return null;const bet=x.reduce((a,e)=>a+e.a,0),won=x.reduce((a,e)=>a+e.win,0);
+    return{p,bet,won,net:won-bet,hits:x.filter(e=>e.st==='win')}}).filter(Boolean)}
+function rowsTable(rows){return `<div class="tw"><table><thead><tr><th>ผู้เล่น</th><th>ทาย</th><th>ได้</th><th>สุทธิ</th></tr></thead><tbody>${rows.map(r=>`<tr><td class="name">${esc(r.p.name)}${r.hits.length?`<br><small class="pos">ถูก ${r.hits.map(e=>TYPES[e.t].label+' '+e.n).join(', ')}</small>`:''}</td><td>${fmt(r.bet)}</td><td>${fmt(r.won)}</td><td class="${r.net<0?'neg':'pos'}">${signed(r.net)}</td></tr>`).join('')}</tbody></table></div>`}
+function doDraw(){const top=$('#d-top').value.trim(),bot=$('#d-bot').value.trim();
+  if(!/^\d{3}$/.test(top)||!/^\d{2}$/.test(bot))return toast('ใส่ 3 ตัวบน 3 หลัก และ 2 ตัวล่าง 2 หลัก');
+  const r=current();
+  db.entries.filter(e=>e.r===r.id&&e.st==='pend').forEach(e=>{if(hit(e,top,bot)){e.st='win';e.win=e.a*e.rate;const p=pById(e.p);if(p)p.points+=e.win}else e.st='lose'});
+  r.status='settled';r.result={top,bot};r.at=Date.now();db.carts={};save();current();renderAll();
+  const rows=roundRows(r.id);
+  openSheet('drawn','ผลงวด '+thDate(r.id),`<div class="hres"><span>3 ตัวบน <b>${top}</b></span><span>2 ตัวล่าง <b>${bot}</b></span></div>
+  ${rows.length?rowsTable(rows):'<p class="note">งวดนี้ไม่มีใครทาย</p>'}
+  <p class="note">เปิดงวด ${thDate(current().id)} ให้แล้ว</p><button class="btn gold block" data-act="close">ตกลง</button>`)}
+
+function showResults(){
+  const rows=Object.keys(OFFICIAL).map(k=>({k,first:OFFICIAL[k][0],bot:OFFICIAL[k][1],sim:false}));
+  db.rounds.filter(r=>r.status==='settled'&&!OFFICIAL[r.id]).forEach(r=>rows.push({k:r.id,first:'',top:r.result.top,bot:r.result.bot,sim:true}));
+  rows.sort((a,b)=>a.k<b.k?1:-1);
+  const cnt={};Object.values(OFFICIAL).forEach(([,b])=>cnt[b]=(cnt[b]||0)+1);
+  const rep=Object.entries(cnt).filter(([,c])=>c>1).sort((a,b)=>b[1]-a[1]);
+  const digit=Array(10).fill(0);Object.values(OFFICIAL).forEach(([,b])=>[...b].forEach(d=>digit[d]++));
+  openSheet('results','ผลรางวัลย้อนหลัง',`<div class="tw"><table><thead><tr><th>งวด</th><th>รางวัลที่ 1</th><th>3 ตัวบน</th><th>2 ตัวล่าง</th></tr></thead><tbody>
+  ${rows.map(r=>`<tr><td>${thDate(r.k)}${r.sim?' <span class="cap">จำลอง</span>':''}</td><td>${r.first||'-'}</td><td><b>${r.first?r.first.slice(-3):r.top}</b></td><td><b>${r.bot}</b></td></tr>`).join('')}</tbody></table></div>
+  <h3>2 ตัวล่างที่ออกซ้ำในปี 2569</h3>
+  <p class="note">${rep.length?rep.map(([b,c])=>`<b>${b}</b> ออก ${c} ครั้ง`).join(' · '):'ไม่มี'} จากทั้งหมด ${Object.keys(OFFICIAL).length} งวด</p>
+  <div class="tw"><table><thead><tr><th>เลข</th>${digit.map((_,i)=>`<th>${i}</th>`).join('')}</tr></thead><tbody><tr><td>ครั้งที่ปรากฏใน 2 ตัวล่าง</td>${digit.map(c=>`<td>${c}</td>`).join('')}</tr></tbody></table></div>
+  <p class="note">ข้อมูลผลจริงฝังไว้ในแอพถึงงวด 16/10/2569 แอพนี้ทำงานในเครื่องโดยไม่ต่ออินเทอร์เน็ต งวดใหม่ใส่ผลเองตอนออกผล ผลที่ใส่เองจะขึ้นป้าย "จำลอง"</p>`)}
+
+/* ---------- lesson report (PDF) ---------- */
+let DL=null;(async()=>{try{if(window.claude&&claude.use)DL=await claude.use('downloads')}catch(e){}if(sheetKind==='report')renderReport()})();
+function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function buildSample(){const R=rng(13);const names=['กาย','ก๊อต','มิ้นท์','ฟ้า','บอส','แพรว'];const players=names.map((n,i)=>({id:i+1,name:n}));
+  const dates=['2026-09-01','2026-09-16','2026-10-01','2026-10-16'];const rates=Object.fromEntries(Object.entries(TYPES).map(([k,t])=>[k,t.rate]));const capPct=50;
+  const caps=[{t:'2bot',n:'48'},{t:'2bot',n:'64'},{t:'2top',n:'40'}];
+  const rounds=dates.map(id=>({id,result:{top:OFFICIAL[id][0].slice(-3),bot:OFFICIAL[id][1]}}));const entries=[];let id=1;
+  rounds.forEach(r=>players.forEach(p=>{const k=4+Math.floor(R()*4);for(let i=0;i<k;i++){const x=R();const t=x<.4?'2bot':x<.75?'2top':x<.85?'1top':x<.93?'3tod':'3top';const len=TYPES[t].len;
+    const n=String(Math.floor(R()*10**len)).padStart(len,'0');
+    const cap=caps.some(c=>c.t===t&&c.n===n);const rate=rates[t]*(cap?capPct/100:1);const a=[10,10,20,20,30,50][Math.floor(R()*6)];
+    const e={id:id++,p:p.id,r:r.id,t,n,a,rate,cap,st:'lose',win:0};if(hit(e,r.result.top,r.result.bot)){e.st='win';e.win=a*rate}entries.push(e)}}));
+  return{players,rounds,entries,rates,capPct,sample:true}}
+function realData(){const rounds=db.rounds.filter(r=>r.status==='settled');const ids=new Set(rounds.map(r=>r.id));
+  return{players:db.players,rounds,entries:db.entries.filter(e=>ids.has(e.r)&&(e.st==='win'||e.st==='lose')),rates:db.rates,capPct:db.capPct,sample:false}}
+const sum=(a,k)=>a.reduce((s,e)=>s+e[k],0);
+function calc(d){
+  const pl=d.players.map(p=>{const x=d.entries.filter(e=>e.p===p.id);const bet=sum(x,'a'),won=sum(x,'win');return{p,n:x.length,bet,won,net:won-bet,hits:x.filter(e=>e.st==='win')}}).filter(r=>r.n).sort((a,b)=>b.net-a.net);
+  const bet=sum(d.entries,'a'),won=sum(d.entries,'win');
+  const types=Object.keys(TYPES).map(k=>{const x=d.entries.filter(e=>e.t===k);const b=sum(x,'a'),w=sum(x,'win');return{k,b,w,real:b?w/b:0,theo:d.rates[k]*TYPES[k].p}}).filter(t=>t.b);
+  const capHits=d.entries.filter(e=>e.cap&&e.st==='win');
+  const rounds=d.rounds.map(r=>{const x=d.entries.filter(e=>e.r===r.id);const b=sum(x,'a'),w=sum(x,'win');return{r,b,w,n:x.length}});
+  return{pl,bet,won,house:bet-won,ret:bet?won/bet:0,types,capHits,capPaid:sum(capHits,'win'),capFull:capHits.reduce((s,e)=>s+e.a*d.rates[e.t],0),rounds}}
+const pct=v=>(v*100).toLocaleString('th-TH',{maximumFractionDigits:1})+'%';
+function reportHtml(d){const c=calc(d);
+  if(!c.rounds.length||!c.bet)return '';
+  const first=c.rounds[0].r.id,last=c.rounds[c.rounds.length-1].r.id;
+  const gain=c.pl.filter(r=>r.net>0).length,loss=c.pl.filter(r=>r.net<0).length;
+  const per100=Math.round(c.ret*100);
+  const maxV=Math.max(1,...c.types.map(t=>Math.max(t.real,t.theo)));
+  return `<div class="rsec r-head">${d.sample?'<span class="r-badge">ข้อมูลตัวอย่าง</span>':''}
+    <div class="r-kicker">รายงานสรุปการสาธิต · เกมทายเลขด้วยแต้ม</div>
+    <h1>ทาย ${fmt(c.bet)} แต้ม ได้คืน ${fmt(c.won)} แต้ม</h1>
+    <p>งวด ${thDate(first)}${first!==last?' ถึง '+thDate(last):''} · ${c.rounds.length} งวด · ผู้เล่น ${c.pl.length} คน · ทายทั้งหมด ${fmt(d.entries.length)} ครั้ง</p></div>
+  <div class="rsec r-kpis">
+    <div><span>ทั้งห้องทายรวม</span><b>${fmt(c.bet)}</b><small>แต้ม</small></div>
+    <div><span>จ่ายคืนผู้เล่น</span><b>${fmt(c.won)}</b><small>แต้ม</small></div>
+    <div><span>ผู้เล่นได้คืน</span><b>${pct(c.ret)}</b><small>ของที่ทาย</small></div>
+    <div class="hl"><span>เจ้ามือได้ไป</span><b>${signed(c.house)}</b><small>แต้ม</small></div></div>
+  <div class="rsec r-lesson"><b>ข้อสรุปจากห้องนี้</b>
+    <p>ทุก 100 แต้มที่ทาย ผู้เล่นได้คืนเฉลี่ย <strong>${per100} แต้ม</strong> ส่วนต่างอีก ${100-per100} แต้มเป็นของเจ้ามือ ${gain?`มีผู้เล่นได้กำไร ${gain} คน `:''}ขาดทุน ${loss} คน ${gain?'คนที่ได้กำไรมักถูกรางวัลครั้งเดียวที่จ่ายสูง ถ้าทายต่อไปหลายงวด ผลจะค่อยๆ ถูกดึงกลับเข้าหาอัตราคืนตามทฤษฎี':''}</p></div>
+  <div class="rsec"><h2>ผลรายคน</h2><table><thead><tr><th>อันดับ</th><th>ผู้เล่น</th><th>ทาย (ครั้ง)</th><th>แต้มที่ทาย</th><th>ได้คืน</th><th>สุทธิ</th></tr></thead><tbody>
+    ${c.pl.map((r,i)=>`<tr><td>${i+1}</td><td class="nm">${esc(r.p.name)}${r.hits.length?`<small>ถูก ${r.hits.map(e=>TYPES[e.t].label+' '+e.n+(e.cap?' (อั้น)':'')).join(', ')}</small>`:''}</td><td>${r.n}</td><td>${fmt(r.bet)}</td><td>${fmt(r.won)}</td><td class="${r.net<0?'neg':'pos'}">${signed(r.net)}</td></tr>`).join('')}</tbody></table></div>
+  <div class="rsec"><h2>อัตราคืนจริงเทียบทฤษฎี แยกประเภท</h2>
+    <div class="r-legend"><i class="real"></i>คืนจริงในห้องนี้<i class="theo"></i>คืนตามทฤษฎี (อัตราจ่าย × โอกาสถูก)</div>
+    ${c.types.map(t=>`<div class="r-bar"><div class="lb">${TYPES[t.k].label}<small>ทาย ${fmt(t.b)} แต้ม</small></div><div class="tr">
+      <div class="b real" style="width:${t.real/maxV*100}%"></div><span>${pct(t.real)}</span>
+      <div class="b theo" style="width:${t.theo/maxV*100}%"></div><span>${pct(t.theo)}</span></div></div>`).join('')}
+    <p class="r-note">ประเภทที่ทายน้อยครั้ง ผลจริงจะแกว่งมาก เช่น 0% หรือเกิน 100% แต่ทฤษฎีของทุกประเภทต่ำกว่า 100% เสมอ</p></div>
+  <div class="rsec"><h2>ผลของเลขอั้น (จ่าย ${d.capPct}%)</h2>
+    ${c.capHits.length?`<p>มีผู้ทายถูกเลขอั้น ${c.capHits.length} ครั้ง ได้รับ <strong>${fmt(c.capPaid)}</strong> แต้ม ถ้าจ่ายเต็มจะได้ ${fmt(c.capFull)} แต้ม เจ้ามือประหยัดไป <strong>${fmt(c.capFull-c.capPaid)}</strong> แต้ม</p>
+      <ul>${c.capHits.map(e=>`<li>${esc((d.players.find(p=>p.id===e.p)||{}).name||'-')} · ${TYPES[e.t].label} ${e.n} · งวด ${thDate(e.r)} · ทาย ${fmt(e.a)} ได้ ${fmt(e.win)} แทน ${fmt(e.a*d.rates[e.t])}</li>`).join('')}</ul>`
+      :'<p>ไม่มีผู้ทายถูกเลขอั้นในช่วงนี้</p>'}
+    <p class="r-note">เลขอั้นมักเป็นเลขที่คนนิยมทาย การลดอัตราจ่ายเฉพาะเลขเหล่านี้ทำให้ผู้เล่นได้คืนต่ำกว่าทฤษฎีลงไปอีก</p></div>
+  <div class="rsec"><h2>สรุปรายงวด</h2><table><thead><tr><th>งวด</th><th>3 ตัวบน</th><th>2 ตัวล่าง</th><th>ทายรวม</th><th>จ่ายคืน</th><th>เจ้ามือ</th></tr></thead><tbody>
+    ${c.rounds.map(x=>`<tr><td>${thDate(x.r.id)}</td><td class="mono">${x.r.result.top}</td><td class="mono">${x.r.result.bot}</td><td>${fmt(x.b)}</td><td>${fmt(x.w)}</td><td class="${x.b-x.w<0?'neg':'pos'}">${signed(x.b-x.w)}</td></tr>`).join('')}</tbody></table></div>
+  <div class="rsec r-foot">สร้างจากแอพเลขลุ้นแต้ม · ใช้แต้มจำลอง ไม่ใช่เงินจริง · ${thDate(keyOf(new Date()))}${d.sample?' · ข้อมูลตัวอย่างจากผลรางวัลจริง 4 งวด และการทายแบบสุ่ม':''}</div>`}
+let repSample=false;
+function showReport(){repSample=!db.rounds.some(r=>r.status==='settled');sheetKind='report';openSheet('report','รายงานสรุปบทเรียน','');renderReport()}
+function renderReport(){const hasReal=db.rounds.some(r=>r.status==='settled');const d=repSample?buildSample():realData();const html=reportHtml(d);
+  $('#sheet-body').innerHTML=`<div class="seg"><button class="${!repSample?'on':''}" data-act="rep-real">ข้อมูลห้องเรียน</button><button class="${repSample?'on':''}" data-act="rep-sample">ตัวอย่าง</button></div>
+  ${html?`<div class="rpt-wrap"><div class="rpt" id="rpt">${html}</div></div>`:`<p class="note">${hasReal?'งวดที่ออกผลแล้วยังไม่มีใครทาย':'ยังไม่มีงวดที่ออกผล ออกผลจากเมนูก่อน หรือกด "ตัวอย่าง" เพื่อดูหน้าตารายงาน'}</p>`}
+  ${html?(DL?'<button class="btn gold block" data-act="pdf" id="pdf-btn">บันทึกเป็น PDF</button>':'<p class="note">บันทึก PDF ได้เมื่อเปิดแอพนี้ใน claude.ai หรือแอพ Claude</p>'):''}`}
+function loadScript(src){return new Promise((ok,no)=>{if(document.querySelector(`script[src="${src}"]`))return ok();const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s)})}
+async function exportPdf(btn){if(!DL)return;btn.disabled=true;btn.textContent='กำลังสร้าง PDF…';
+  let host;try{
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    const d=repSample?buildSample():realData();
+    host=document.createElement('div');host.className='rpt rpt-print';host.innerHTML=reportHtml(d);document.body.appendChild(host);
+    try{await document.fonts.ready}catch(e){}
+    const pdf=new window.jspdf.jsPDF({unit:'mm',format:'a4'});const M=12,CW=210-2*M,PH=297-2*M;let y=M;
+    for(const sec of host.querySelectorAll('.rsec')){const cv=await html2canvas(sec,{scale:2,backgroundColor:'#ffffff',logging:false});
+      let w=CW,h=cv.height*CW/cv.width;if(h>PH){w=w*PH/h;h=PH}
+      if(y+h>M+PH&&y>M){pdf.addPage();y=M}
+      pdf.addImage(cv.toDataURL('image/jpeg',0.92),'JPEG',M,y,w,h);y+=h+3}
+    const blob=pdf.output('blob');
+    await DL.save({filename:'รายงานสรุปบทเรียน-'+keyOf(new Date())+'.pdf',data:blob});toast('บันทึก PDF แล้ว');
+  }catch(err){const code=err&&err.code;if(code!=='declined')toast(code==='rate_limited'?'รอสักครู่แล้วลองอีกครั้ง':'สร้าง PDF ไม่สำเร็จ ลองอีกครั้ง')}
+  finally{if(host)host.remove();btn.disabled=false;btn.textContent='บันทึกเป็น PDF'}}
+
+let capT='2top';
+function showCaps(){const len=TYPES[capT].len;
+  openSheet('caps','เลขอั้น',`<div class="allrow"><label for="cap-pct">เลขอั้นจ่าย (% ของอัตราปกติ)</label><input type="number" id="cap-pct" min="1" max="100" step="1" value="${db.capPct}"><span class="note">%</span></div>
+  <div class="types">${Object.keys(TYPES).map(k=>`<button class="type${k===capT?' on':''}" data-act="cap-type" data-t="${k}"><b>${TYPES[k].label}</b><small>ปกติ ${fmt(db.rates[k])} · อั้น ${fmt(db.rates[k]*db.capPct/100)}</small></button>`).join('')}</div>
+  <div class="addp capadd"><label for="cap-num">เลข ${len} หลัก (${TYPES[capT].label})<input class="txt" id="cap-num" inputmode="numeric" maxlength="${len}" autocomplete="off"></label><button class="btn gold" data-act="cap-add">อั้นเลขนี้</button><button class="btn ghost" data-act="cap-rev">อั้นพร้อมเลขกลับ</button></div>
+  ${Object.keys(TYPES).map(k=>{const it=db.caps.filter(c=>c.t===k);return it.length?`<div class="gh"><h3>${TYPES[k].label}</h3><span>${it.length} เลข</span></div><div class="capl">${it.map(c=>`<button class="rnum" data-act="cap-rm" data-t="${c.t}" data-n="${c.n}" aria-label="เลิกอั้น ${c.n}"><span>${c.n}</span><span class="x" aria-hidden="true">×</span></button>`).join('')}</div>`:''}).join('')||'<p class="note">ยังไม่มีเลขอั้น</p>'}
+  <p class="note">เลขอั้นมีผลกับการทายใหม่ โพยที่บันทึกไปแล้วใช้อัตราตอนที่ทาย</p>`)}
+function addCap(withRev){const len=TYPES[capT].len,v=$('#cap-num').value.trim();
+  if(!new RegExp('^\\d{'+len+'}$').test(v))return toast(`ใส่เลข ${len} หลัก`);
+  let n=0;(withRev?perms(v):[v]).forEach(x=>{if(!isCap(capT,x)){db.caps.push({t:capT,n:x});n++}});
+  save();renderRail();showCaps();toast(n?`อั้นเพิ่ม ${n} เลข`:'อั้นเลขนี้แล้ว')}
+
+function showHistory(){const rs=db.rounds.filter(r=>r.status==='settled').slice().reverse();
+  openSheet('history','งวดที่ผ่านมา',rs.length?rs.map(r=>{const rows=roundRows(r.id);
+    return `<div class="gh"><h3>งวด ${thDate(r.id)}</h3></div><div class="hres"><span>บน <b>${r.result.top}</b></span><span>ล่าง <b>${r.result.bot}</b></span></div>${rows.length?rowsTable(rows):'<p class="note">ไม่มีใครทาย</p>'}`}).join('')
+    :'<p class="note">ยังไม่มีงวดที่ออกผล ลองออกผลจากเมนู</p>')}
+
+function showStats(){const done=db.entries.filter(e=>e.st==='win'||e.st==='lose');
+  const board=db.players.map(p=>{const x=done.filter(e=>e.p===p.id);const bet=x.reduce((a,e)=>a+e.a,0),won=x.reduce((a,e)=>a+e.win,0);return{p,bet,won,hits:x.filter(e=>e.st==='win').length}}).sort((a,b)=>b.p.points-a.p.points);
+  const bet=done.reduce((a,e)=>a+e.a,0),won=done.reduce((a,e)=>a+e.win,0);
+  const theo=Object.keys(TYPES).map(k=>{const x=done.filter(e=>e.t===k);const b=x.reduce((a,e)=>a+e.a,0),w=x.reduce((a,e)=>a+e.win,0);
+    return `<tr><td>${TYPES[k].label}</td><td>${fmt(b)}</td><td>${b?Math.round(w/b*100)+'%':'-'}</td><td>${(db.rates[k]*TYPES[k].p*100).toFixed(1)}%</td></tr>`}).join('');
+  openSheet('stats','ตารางคะแนน',`<div class="tw"><table><thead><tr><th>ผู้เล่น</th><th>แต้ม</th><th>ทายรวม</th><th>ได้คืน</th><th>คืน %</th></tr></thead><tbody>
+  ${board.map((r,i)=>`<tr><td class="name"><span class="rank">${i+1}</span>${esc(r.p.name)}</td><td><b>${fmt(r.p.points)}</b></td><td>${fmt(r.bet)}</td><td>${fmt(r.won)}</td><td>${r.bet?Math.round(r.won/r.bet*100)+'%':'-'}</td></tr>`).join('')}</tbody></table></div>
+  <div class="stat"><div><span>ทั้งห้องทายรวม</span><b>${fmt(bet)}</b></div><div><span>ทั้งห้องได้คืน</span><b>${bet?Math.round(won/bet*100)+'%':'-'}</b></div></div>
+  <h3>คืนจริงเทียบทฤษฎี</h3>
+  <div class="tw"><table><thead><tr><th>ประเภท</th><th>ทาย</th><th>คืนจริง</th><th>ทฤษฎี</th></tr></thead><tbody>${theo}</tbody></table></div>
+  <p class="note">คืนตามทฤษฎี = อัตราจ่าย × โอกาสถูก เช่น 2 ตัวบนจ่าย 90 โอกาสถูก 1 ใน 100 ได้คืนเฉลี่ย 90% ยิ่งทายหลายงวด ผลรวมทั้งห้องยิ่งเข้าใกล้ค่านี้ (3 ตัวโต๊ดคิดจากเลขไม่ซ้ำกัน) ถ้ามีเลขอั้นถูก คืนจริงจะต่ำกว่าทฤษฎีลงอีก</p>`)}
+
+function showSettings(){openSheet('settings','อัตราจ่ายและข้อมูล',`<h3>อัตราจ่าย (ต่อ 1 แต้ม)</h3>
+  <div class="rates">${Object.keys(TYPES).map(k=>`<label for="rate-${k}">${TYPES[k].label}</label><input type="number" id="rate-${k}" min="1" step="1" value="${db.rates[k]}">`).join('')}</div>
+  <button class="btn gold" data-act="save-rates">บันทึกอัตราจ่าย</button><p class="note">มีผลกับการทายใหม่เท่านั้น</p>
+  <h3>สำรองข้อมูล</h3><textarea id="bk-out" readonly></textarea><button class="btn ghost" data-act="copy-bk">คัดลอกข้อมูล</button>
+  <h3>นำเข้าข้อมูล</h3><textarea id="bk-in" placeholder="วางข้อมูลที่สำรองไว้ที่นี่"></textarea><button class="btn ghost" data-act="import">นำเข้า (แทนที่ข้อมูลปัจจุบัน)</button>
+  <h3>เริ่มใหม่</h3><button class="btn ghost danger" data-act="reset">ล้างข้อมูลทั้งหมด</button>`);$('#bk-out').value=JSON.stringify(db)}
+
+/* ---------- events ---------- */
+document.addEventListener('click',e=>{
+  if(e.target.id==='scrim')return closeSheet();
+  const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act;
+  switch(a){
+    case 'digit':press(b.dataset.d);break;
+    case 'back':buf=buf.slice(0,-1);renderSlots();break;
+    case 'clear':buf='';renderSlots();break;
+    case 'pick':db.cur=+b.dataset.id;buf='';save();renderAll();break;
+    case 'tab':tab=+b.dataset.n;sel=new Set([typesOf(tab)[0]]);buf='';qd=null;renderTabs();renderSlots();renderMode();break;
+    case 'type':{const t=b.dataset.t;sel.has(t)?sel.delete(t):sel.add(t);renderTabs();break}
+    case 'mode':mode=b.dataset.m;renderMode();break;
+    case 'qd':qd=b.dataset.d;renderQuick();break;
+    case 'q1':if(guard()){const n=addNums([b.dataset.d]);toast(n?'เพิ่มเลข '+b.dataset.d:'มีเลขนี้แล้ว')}break;
+    case 'quick':quick(b.dataset.k);break;
+    case 'reverse':reverse();break;
+    case 'rm':db.carts[P().id]=cart().filter(c=>!(c.t===b.dataset.t&&c.n===b.dataset.n));save();renderRail();break;
+    case 'clear-cart':db.carts[P().id]=[];save();renderRail();break;
+    case 'price':showPrice();break;
+    case 'amt-all':{const v=$('#amt-all').value;document.querySelectorAll('.amt').forEach(i=>i.value=v);updPrice();break}
+    case 'confirm-bet':confirmBet();break;
+    case 'bets':showBets();break;
+    case 'cancel':cancelBet(+b.dataset.id);break;
+    case 'menu':showMenu();break;
+    case 'close':closeSheet();break;
+    case 'players':showPlayers();break;
+    case 'add-p':addPlayer();break;
+    case 'del-p':delPlayer(b);break;
+    case 'topup':{const p=pById(+b.dataset.id);if(p){p.points+=100;save();renderAll();showPlayers();toast(`เติม 100 แต้มให้ ${p.name}`)}break}
+    case 'draw':showDraw();break;
+    case 'rand-draw':$('#d-top').value=String(Math.floor(Math.random()*1000)).padStart(3,'0');$('#d-bot').value=pad(Math.floor(Math.random()*100));break;
+    case 'do-draw':doDraw();break;
+    case 'use-official':{const o=OFFICIAL[current().id];if(o){$('#d-top').value=o[0].slice(-3);$('#d-bot').value=o[1]}break}
+    case 'results':showResults();break;
+    case 'report':showReport();break;
+    case 'rep-real':repSample=false;renderReport();break;
+    case 'rep-sample':repSample=true;renderReport();break;
+    case 'pdf':exportPdf(b);break;
+    case 'caps':showCaps();break;
+    case 'cap-type':capT=b.dataset.t;showCaps();break;
+    case 'cap-add':addCap(false);break;
+    case 'cap-rev':addCap(true);break;
+    case 'cap-rm':db.caps=db.caps.filter(c=>!(c.t===b.dataset.t&&c.n===b.dataset.n));save();renderRail();showCaps();break;
+    case 'history':showHistory();break;
+    case 'stats':showStats();break;
+    case 'settings':showSettings();break;
+    case 'save-rates':{for(const k in TYPES){const v=Math.floor(+$('#rate-'+k).value);if(v>=1)db.rates[k]=v}save();renderTabs();toast('บันทึกอัตราจ่ายแล้ว');break}
+    case 'copy-bk':{const t=$('#bk-out');const sel_=()=>{t.focus();t.select();toast('เลือกข้อความแล้ว กดคัดลอกเอง')};
+      try{navigator.clipboard.writeText(t.value).then(()=>toast('คัดลอกแล้ว'),sel_)}catch(err){sel_()}break}
+    case 'import':{try{const d=JSON.parse($('#bk-in').value);if(!d||d.v!==2||!Array.isArray(d.players)||!d.players.length||!Array.isArray(d.entries))throw 0;db=d;save();closeSheet();renderAll();toast('นำเข้าข้อมูลแล้ว')}catch(err){toast('ข้อมูลไม่ถูกต้อง')}break}
+    case 'reset':if(b.dataset.arm){db=fresh();save();closeSheet();tab=2;sel=new Set(['2top']);buf='';renderAll();toast('เริ่มใหม่แล้ว')}else{b.dataset.arm='1';b.textContent='แตะอีกครั้งเพื่อยืนยันการล้างข้อมูล'}break;
+  }
+});
+document.addEventListener('input',e=>{const t=e.target;if(t.classList.contains('amt'))updPrice();
+  if(t.id==='d-top'||t.id==='d-bot'||t.id==='cap-num')t.value=t.value.replace(/\D/g,'');
+  if(t.id==='cap-pct'){const v=Math.floor(+t.value);if(v>=1&&v<=100){db.capPct=v;save();
+    document.querySelectorAll('#sheet-body .types .type').forEach(el=>{const k=el.dataset.t;el.querySelector('small').textContent=`ปกติ ${fmt(db.rates[k])} · อั้น ${fmt(db.rates[k]*v/100)}`})}}});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='cap-num')addCap(false)});
+document.addEventListener('keydown',e=>{if(sheetKind){if(e.key==='Escape')closeSheet();return}if(/^\d$/.test(e.key))press(e.key);else if(e.key==='Backspace'){buf=buf.slice(0,-1);renderSlots()}});
+
+db=load()||fresh();save();current();renderAll();setInterval(tick,1000);
+})();
+</script>
+
+</body></html>
